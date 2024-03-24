@@ -126,7 +126,7 @@ def ask_question_wrapper(question, str):
     return ask_question(question, memory, loaded_memory, standalone_question, retrieved_documents, answer)
 
 # Liste des noms de fichiers PDF
-pdf_files = ["/home/ado/Downloads/sample-pdf-file.pdf"]
+pdf_files = ["YOUR_PDF_FILE_PATH"]
 #"C:/Users/ulyss/HACKATON/s71500_et200mp_system_manual_en-US_en-US.pdf"
 
 # Initialiser une liste vide pour stocker les documents
