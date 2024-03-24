@@ -1,0 +1,13 @@
+gradio
+opencv-python
+numpy
+gTTS
+playsound
+SpeechRecognition
+scipy
+langchain-core
+langchain-openai
+openai
+langchain
+PyPDF
+faiss-cpu
