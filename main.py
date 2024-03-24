@@ -14,7 +14,7 @@ from playsound import playsound
 import speech_recognition as sr
 from gtts import gTTS
 
-# Importations tierces
+# Third-party importations
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, format_document
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough, RunnableParallel
@@ -27,10 +27,10 @@ from langchain_community.vectorstores import Qdrant, FAISS
 from langchain_text_splitters import CharacterTextSplitter
 from openai import AzureOpenAI
 
-# Reconnaissance vocale
+# Voice recognition
 recognizer = sr.Recognizer()
 
-# Configuration des variables d'environnement
+# Set the environment variables
 os.environ["AZURE_OPENAI_API_KEY"] = ("INSERT YOUR API KEY HERE")
 os.environ["AZURE_OPENAI_ENDPOINT"] = ("INSERT YOUR ENDPOINT HERE")
 
@@ -39,11 +39,11 @@ api_key= os.getenv("AZURE_OPENAI_API_KEY")
 deployment_name = 'DEPLOYEMENT_NAME'
 api_version = 'API_VERSION'
 
-# Initialisation des objets
+# Inilialization of the models
 embeddings = AzureOpenAIEmbeddings(azure_deployment="DEPLOYEMENT_NAME", openai_api_version="API_VERSION")
 modeltemp = AzureChatOpenAI(openai_api_version="API_VERSION", azure_deployment="DEPLOYEMENT_NAME", temperature=0, max_tokens=250)
 
-# Reconnaissance vocale
+# Speech recognition
 def transcribe(audio):
     try:
         sample_rate = audio[0]
@@ -70,13 +70,13 @@ def transcribe(audio):
 
 # Text to speech
 def text_to_speech(text):
-    # Créer un objet gTTS
+    # Convert the text to speech
     tts = gTTS(text=text, lang='fr')
-    # Sauvegarder le fichier audio
+    # Save the audio file
     tts.save("output.mp3")
-    # Jouer le fichier audio
+    # Play the audio file
     playsound("output.mp3")
-    # Supprimer le fichier audio après la lecture
+    # Delete the audio file after playing
     os.remove("output.mp3")
 
 #image
@@ -100,6 +100,7 @@ def describe_image(image_path):
         base_url=f"{api_base}openai/deployments/{deployment_name}/extensions",
     )
 
+    # Call the API
     response = client.chat.completions.create(
         model=deployment_name,
         messages=[
@@ -121,20 +122,18 @@ def describe_image(image_path):
     )
     return response.choices[0].message.content
 
-# Utilisation de l'interface Gradio pour poser des questions
+# Question for the image
 def ask_question_wrapper(question, str):
     return ask_question(question, memory, loaded_memory, standalone_question, retrieved_documents, answer)
 
-# Liste des noms de fichiers PDF
+# List of PDF files
 pdf_files = ["YOUR_PDF_FILE_PATH"]
-#"C:/Users/ulyss/HACKATON/s71500_et200mp_system_manual_en-US_en-US.pdf"
 
-# Initialiser une liste vide pour stocker les documents
+# Initialize the list of documents
 docs = []
 
-# Parcourir la liste des noms de fichiers
+# Load and split the PDF files
 for pdf_file in pdf_files:
-    # Charger et diviser chaque fichier PDF
     loader = PyPDFLoader(pdf_file)
     docs += loader.load_and_split()
 
@@ -161,7 +160,6 @@ CONDENSE_QUESTION_PROMPT = ChatPromptTemplate.from_template(_template)
 
 DEFAULT_DOCUMENT_PROMPT = PromptTemplate.from_template(template="{page_content}")
 
-#memory
 memory = ConversationBufferMemory(
     return_messages=True, output_key="answer", input_key="question"
 )
@@ -178,7 +176,7 @@ def update(name):
     personality = f"{name}"
     return f"Welcome to Gradio, {personality}!"
 
-
+#Gradio interface
 with gr.Blocks() as demo:
     with gr.Tab("Chatbot"):
         gr.Markdown("Appuye sur run après avoir donnez la personnalité")
@@ -191,7 +189,8 @@ with gr.Blocks() as demo:
         gr.Interface(fn=describe_image, inputs="image", outputs="text")
     with gr.Tab("Audio"):
         gr.Interface(fn=transcribe, inputs="microphone", outputs="text")
-# Maintenant, nous calculons la question autonome
+
+# Now we construct the inputs for the standalone question model
 standalone_question = {
     "standalone_question": {
         "question": lambda x: x["question"],
@@ -227,20 +226,20 @@ def _combine_documents(
 retrieved_documents = {
     "docs": itemgetter("standalone_question") | retriever,
     "question": lambda x: x["standalone_question"],
-    "personality": lambda x: personality,  # Ajout de la personnalité
+    "personality": lambda x: personality, 
 }
 # Now we construct the inputs for the final prompt
 final_inputs = {
     "context": lambda x: _combine_documents(x["docs"]),
     "question": itemgetter("question"),
-    "personality": lambda x: personality,  # Ajout de la personnalité
+    "personality": lambda x: personality,  
 }
 
-# Création de la réponse
+# Create the final answer model
 answer = {
     "answer": final_inputs | ANSWER_PROMPT | modeltemp,
     "docs": itemgetter("docs"),
-    "personality": lambda x: personality,  # Ajout de la personnalité
+    "personality": lambda x: personality, 
 }
 
 def ask_question(question, memory, loaded_memory, standalone_question, retrieved_documents, answer):
