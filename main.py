@@ -59,19 +59,19 @@ def transcribe(audio):
         sample_width = 2
         
         audio_instance = sr.AudioData(audio_data_bytes, sample_rate=sample_rate, sample_width=sample_width)
-        text = recognizer.recognize_google(audio_instance, language='fr-FR', show_all=False)
+        text = recognizer.recognize_google(audio_instance, language='en-US', show_all=False)
         question = ask_question(text, memory, loaded_memory, standalone_question, retrieved_documents, answer)
         text_to_speech(question)
         return question
     except sr.UnknownValueError:
-        return "Impossible de reconnaître le discours"
+        return "Unable to recognize speech"
     except sr.RequestError as e:
-        return "Erreur lors de la requête vers Google Speech Recognition: {0}".format(e)
+        return "Error in the request to Google Speech Recognition: {0}".format(e)
 
 # Text to speech
 def text_to_speech(text):
     # Convert the text to speech
-    tts = gTTS(text=text, lang='fr')
+    tts = gTTS(text=text, lang='en')
     # Save the audio file
     tts.save("output.mp3")
     # Play the audio file
@@ -140,15 +140,14 @@ for pdf_file in pdf_files:
 vectorstore = FAISS.from_documents(docs, embeddings)
 retriever = vectorstore.as_retriever()
 
-#first question
-template = """Answer the question based only on the following context et avec exclsuivement la personnalitée de {personality} et en parlant exclusivement de la maniere de {personality}:
+template = """Answer the question based only on the following context and exclusively with the personality of {personality}, speaking only in the manner of {personality}:
 {context}
 
 Question: {question}
 """
 ANSWER_PROMPT = ChatPromptTemplate.from_template(template)
 
-_template = """Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original languageet avec exclsuivement la personnalitée de {personality} et en parlant exclusivement de la maniere de {personality}: et en parlant à la première personne.
+_template = """Given the following conversation and a follow-up question, rephrase the follow-up question to be a standalone question, in its original language, and exclusively with the personality of {personality}, speaking only in the manner of {personality}, and speaking in the first person:
 
 Chat History:
 {chat_history}
@@ -170,7 +169,7 @@ loaded_memory = RunnablePassthrough.assign(
     chat_history=RunnableLambda(memory.load_memory_variables) | itemgetter("history"),
 )
 global personality
-personality = "Intelligence Artificielle Lenny Barre qui est un assistant virtuel intelligent et serviable"
+personality = "Lenny your personal assistant"
 def update(name):
     global personality
     personality = f"{name}"
@@ -179,12 +178,12 @@ def update(name):
 #Gradio interface
 with gr.Blocks() as demo:
     with gr.Tab("Chatbot"):
-        gr.Markdown("Appuye sur run après avoir donnez la personnalité")
+        gr.Markdown("Press run after giving the personality")
         with gr.Row():
-            inp = gr.Textbox(placeholder="Donnez la personnalité a votre IA")
+            inp = gr.Textbox(placeholder="Give your AI a personality")
         btn = gr.Button("Run")
         btn.click(fn=update, inputs=inp)
-        gr.ChatInterface(fn=ask_question_wrapper, title="LENNY BARRE")
+        gr.ChatInterface(fn=ask_question_wrapper, title="LENNY")
     with gr.Tab("Image"):
         gr.Interface(fn=describe_image, inputs="image", outputs="text")
     with gr.Tab("Audio"):
@@ -195,7 +194,7 @@ standalone_question = {
     "standalone_question": {
         "question": lambda x: x["question"],
         "chat_history": lambda x: get_buffer_string(x["chat_history"]),
-        "personality": lambda x: personality,  # Ajout de la personnalité
+        "personality": lambda x: personality,
     }
     | CONDENSE_QUESTION_PROMPT
     | modeltemp
