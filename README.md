@@ -1,6 +1,6 @@
 # Custom Chatbot with RAG, FAISS, and Gradio
 
-This project is a custom chatbot built using RAG (Retrieval-Augmented Generation) for generating responses, FAISS (Facebook AI Similarity Search) for efficient similarity search, and Gradio for creating a user-friendly interface.
+This project is a custom chatbot named LENNY (Language Embeddings Neural Network Yeeting) built using RAG (Retrieval-Augmented Generation) for generating responses, FAISS (Facebook AI Similarity Search) for efficient similarity search, and Gradio for creating a user-friendly interface.
 
 ## Features
 
